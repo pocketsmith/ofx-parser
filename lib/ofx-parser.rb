@@ -35,9 +35,11 @@ module OfxParser
     def self.pre_process(ofx)
       header, body = ofx.split(/\n{2,}|:?<OFX>/, 2)
 
-      header = Hash[*header.gsub(/^\r?\n+/,'').split(/\r\n/).collect do |e|
-        e.split(/:/,2)
-      end.flatten]
+      # rm - some banks send fucked up headers which cause this to error out,
+      # since we don't use the header we can just comment this out.
+      # header = Hash[*header.gsub(/^\r?\n+/,'').split(/\r\n/).collect do |e|
+      #   e.split(/:/,2)
+      # end.flatten]
 
       body.gsub!(/>\s+</m, '><')
       body.gsub!(/\s+</m, '<')
@@ -55,7 +57,12 @@ module OfxParser
     #
     # Returns a DateTime object. Milliseconds (XXX) are ignored.
     def self.parse_datetime(date)
-      DateTime.parse date
+      begin
+        DateTime.parse date
+      rescue
+        # rm - better to have them default to today than not work at all
+        DateTime.now
+      end
     end
 
   private
@@ -163,7 +170,7 @@ module OfxParser
       transaction = Transaction.new
       transaction.type = (t/"TRNTYPE").inner_text
       transaction.date = parse_datetime((t/"DTPOSTED").inner_text)
-      transaction.amount = (t/"TRNAMT").inner_text
+      transaction.amount = transaction.processed_amount((t/"TRNAMT").inner_text)
       transaction.fit_id = (t/"FITID").inner_text
       transaction.payee = (t/"PAYEE").inner_text + (t/"NAME").inner_text
       transaction.memo = (t/"MEMO").inner_text

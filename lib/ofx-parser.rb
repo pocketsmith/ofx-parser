@@ -86,8 +86,11 @@ module OfxParser
         build_credit(fragment)
       end
 
-      # Investments (?)
-      #build_investment((doc/"SIGNONMSGSRQV1"))
+      # Investments
+      investment_fragment = (doc/"INVSTMTMSGSRSV1/INVSTMTTRNRS")
+      ofx.investment_accounts = investment_fragment.collect do |fragment|
+        build_investment(fragment)
+      end
 
       ofx
     end
@@ -165,6 +168,33 @@ module OfxParser
       acct
     end
 
+    def self.build_investment(doc)
+      acct = InvestmentAccount.new
+
+      acct.number = (doc/"INVSTMTRS/INVACCTFROM/ACCTID").inner_text
+      acct.broker_id = (doc/"INVSTMTRS/INVACCTFROM/BROKERID").inner_text
+      acct.transaction_uid = (doc/"TRNUID").inner_text.strip
+
+      acct.margin_balance = (doc/"INVSTMTRS/INVBAL/MARGINBALANCE").inner_text
+      acct.short_balance = (doc/"INVSTMTRS/INVBAL/SHORTBALANCE").inner_text
+      acct.cash_balance = (doc/"INVSTMTRS/INVBAL/AVAILCASH").inner_text
+
+      # We'd also build positions from INVPOSLIST but we don't have test
+      # files that contain any at the moment
+
+      statement = Statement.new
+      statement.currency = (doc/"INVSTMTRS/CURDEF").inner_text
+      statement.start_date = parse_datetime((doc/"INVSTMTRS/INVTRANLIST/DTSTART").inner_text)
+      statement.end_date = parse_datetime((doc/"INVSTMTRS/INVTRANLIST/DTEND").inner_text)
+      acct.statement = statement
+
+      statement.transactions = (doc/"INVSTMTRS/INVTRANLIST/INVBANKTRAN/STMTTRN").collect do |t|
+        build_transaction(t)
+      end
+
+      acct
+    end
+
     # for credit and bank transactions.
     def self.build_transaction(t)
       transaction = Transaction.new
@@ -177,11 +207,6 @@ module OfxParser
       transaction.sic = (t/"SIC").inner_text
       transaction.check_number = (t/"CHECKNUM").inner_text unless (t/"CHECKNUM").inner_text.empty?
       transaction
-    end
-
-
-    def self.build_investment(doc)
-
     end
 
     def self.build_status(doc)

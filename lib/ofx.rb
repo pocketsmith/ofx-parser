@@ -53,7 +53,7 @@ module OfxParser
                   :investment_accounts
 
     def accounts
-      [ bank_accounts, credit_accounts, investment_accounts ].flatten!.compact!
+      [ bank_accounts, credit_accounts, investment_accounts ].flatten.compact
     end
 
     def bank_account #:nodoc:

@@ -158,15 +158,6 @@ module OfxParser
       Mcc::CODES[sic]
     end
 
-    # jrkw - this assumes that the transaction_type has already been set by the time this method is called
-    def processed_amount(amount_string)
-      if type == :DEBIT && amount_string.to_f > 0
-        amount_string.to_f * -1 # ensure that the transaction amount is negative if it needs to be - no +ve debit transactions!
-      else
-        amount_string.to_f
-      end
-    end
-
     def eql?(other)
       self.fit_id == other.fit_id
     end

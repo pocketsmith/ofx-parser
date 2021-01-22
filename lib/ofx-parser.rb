@@ -200,7 +200,7 @@ module OfxParser
       transaction = Transaction.new
       transaction.type = (t/"TRNTYPE").inner_text
       transaction.date = parse_datetime((t/"DTPOSTED").inner_text)
-      transaction.amount = transaction.processed_amount((t/"TRNAMT").inner_text)
+      transaction.amount = (t/"TRNAMT").inner_text.to_f
       transaction.fit_id = (t/"FITID").inner_text
       transaction.payee = (t/"PAYEE").inner_text + (t/"NAME").inner_text
       transaction.memo = (t/"MEMO").inner_text

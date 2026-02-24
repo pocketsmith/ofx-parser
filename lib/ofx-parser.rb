@@ -126,19 +126,19 @@ module OfxParser
       acct = BankAccount.new
 
       acct.transaction_uid = (doc/"TRNUID").inner_text.strip
-      acct.number = (doc/"STMTRS/BANKACCTFROM/ACCTID").inner_text
-      acct.routing_number = (doc/"STMTRS/BANKACCTFROM/BANKID").inner_text
-      acct.type = (doc/"STMTRS/BANKACCTFROM/ACCTTYPE").inner_text.strip
-      acct.balance = (doc/"STMTRS/LEDGERBAL/BALAMT").inner_text
-      acct.balance_date = parse_datetime((doc/"STMTRS/LEDGERBAL/DTASOF").inner_text)
+      acct.number = (doc/"BANKACCTFROM/ACCTID").inner_text
+      acct.routing_number = (doc/"BANKACCTFROM/BANKID").inner_text
+      acct.type = (doc/"BANKACCTFROM/ACCTTYPE").inner_text.strip
+      acct.balance = (doc/"LEDGERBAL/BALAMT").inner_text
+      acct.balance_date = parse_datetime((doc/"LEDGERBAL/DTASOF").inner_text)
 
       statement = Statement.new
-      statement.currency = (doc/"STMTRS/CURDEF").inner_text
-      statement.start_date = parse_datetime((doc/"STMTRS/BANKTRANLIST/DTSTART").inner_text)
-      statement.end_date = parse_datetime((doc/"STMTRS/BANKTRANLIST/DTEND").inner_text)
+      statement.currency = (doc/"CURDEF").inner_text
+      statement.start_date = parse_datetime((doc/"BANKTRANLIST/DTSTART").inner_text)
+      statement.end_date = parse_datetime((doc/"BANKTRANLIST/DTEND").inner_text)
       acct.statement = statement
 
-      statement.transactions = (doc/"STMTRS/BANKTRANLIST/STMTTRN").collect do |t|
+      statement.transactions = (doc/"BANKTRANLIST/STMTTRN").collect do |t|
         build_transaction(t)
       end
 
@@ -148,20 +148,20 @@ module OfxParser
     def self.build_credit(doc)
       acct = CreditAccount.new
 
-      acct.number = (doc/"CCSTMTRS/CCACCTFROM/ACCTID").inner_text
+      acct.number = (doc/"CCACCTFROM/ACCTID").inner_text
       acct.transaction_uid = (doc/"TRNUID").inner_text.strip
-      acct.balance = (doc/"CCSTMTRS/LEDGERBAL/BALAMT").inner_text
-      acct.balance_date = parse_datetime((doc/"CCSTMTRS/LEDGERBAL/DTASOF").inner_text)
-      acct.remaining_credit = (doc/"CCSTMTRS/AVAILBAL/BALAMT").inner_text
-      acct.remaining_credit_date = parse_datetime((doc/"CCSTMTRS/AVAILBAL/DTASOF").inner_text)
+      acct.balance = (doc/"LEDGERBAL/BALAMT").inner_text
+      acct.balance_date = parse_datetime((doc/"LEDGERBAL/DTASOF").inner_text)
+      acct.remaining_credit = (doc/"AVAILBAL/BALAMT").inner_text
+      acct.remaining_credit_date = parse_datetime((doc/"AVAILBAL/DTASOF").inner_text)
 
       statement = Statement.new
-      statement.currency = (doc/"CCSTMTRS/CURDEF").inner_text
-      statement.start_date = parse_datetime((doc/"CCSTMTRS/BANKTRANLIST/DTSTART").inner_text)
-      statement.end_date = parse_datetime((doc/"CCSTMTRS/BANKTRANLIST/DTEND").inner_text)
+      statement.currency = (doc/"CURDEF").inner_text
+      statement.start_date = parse_datetime((doc/"BANKTRANLIST/DTSTART").inner_text)
+      statement.end_date = parse_datetime((doc/"BANKTRANLIST/DTEND").inner_text)
       acct.statement = statement
 
-      statement.transactions = (doc/"CCSTMTRS/BANKTRANLIST/STMTTRN").collect do |t|
+      statement.transactions = (doc/"BANKTRANLIST/STMTTRN").collect do |t|
         build_transaction(t)
       end
 
@@ -171,24 +171,24 @@ module OfxParser
     def self.build_investment(doc)
       acct = InvestmentAccount.new
 
-      acct.number = (doc/"INVSTMTRS/INVACCTFROM/ACCTID").inner_text
-      acct.broker_id = (doc/"INVSTMTRS/INVACCTFROM/BROKERID").inner_text
+      acct.number = (doc/"INVACCTFROM/ACCTID").inner_text
+      acct.broker_id = (doc/"INVACCTFROM/BROKERID").inner_text
       acct.transaction_uid = (doc/"TRNUID").inner_text.strip
 
-      acct.margin_balance = (doc/"INVSTMTRS/INVBAL/MARGINBALANCE").inner_text
-      acct.short_balance = (doc/"INVSTMTRS/INVBAL/SHORTBALANCE").inner_text
-      acct.cash_balance = (doc/"INVSTMTRS/INVBAL/AVAILCASH").inner_text
+      acct.margin_balance = (doc/"INVBAL/MARGINBALANCE").inner_text
+      acct.short_balance = (doc/"INVBAL/SHORTBALANCE").inner_text
+      acct.cash_balance = (doc/"INVBAL/AVAILCASH").inner_text
 
       # We'd also build positions from INVPOSLIST but we don't have test
       # files that contain any at the moment
 
       statement = Statement.new
-      statement.currency = (doc/"INVSTMTRS/CURDEF").inner_text
-      statement.start_date = parse_datetime((doc/"INVSTMTRS/INVTRANLIST/DTSTART").inner_text)
-      statement.end_date = parse_datetime((doc/"INVSTMTRS/INVTRANLIST/DTEND").inner_text)
+      statement.currency = (doc/"CURDEF").inner_text
+      statement.start_date = parse_datetime((doc/"INVTRANLIST/DTSTART").inner_text)
+      statement.end_date = parse_datetime((doc/"INVTRANLIST/DTEND").inner_text)
       acct.statement = statement
 
-      statement.transactions = (doc/"INVSTMTRS/INVTRANLIST/INVBANKTRAN/STMTTRN").collect do |t|
+      statement.transactions = (doc/"INVTRANLIST/INVBANKTRAN/STMTTRN").collect do |t|
         build_transaction(t)
       end
 
